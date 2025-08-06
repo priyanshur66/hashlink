@@ -3,7 +3,21 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { connectWallet, getConnectedAccount, isWalletConnected } from "@/lib/hashconnect";
-import { migrateLegacy, upsertLink, getAllLinks, ensureUniqueId, type PaymentLink } from "@/lib/storage";
+
+// DB shape from Supabase
+type PaymentLink = {
+  id: string;
+  title: string;
+  to_account: string;
+  amount: number;
+  memo: string | null;
+  description: string | null;
+  component_code: string | null;
+  total_paid: number;
+  payments_count: number;
+  created_at: string;
+  updated_at: string;
+};
 
 export default function SavePage() {
   const [to, setTo] = useState("");
@@ -24,10 +38,22 @@ export default function SavePage() {
 
   useEffect(() => {
     setConnectedAccount(getConnectedAccount());
-    // migrate any legacy single entry into links on first load
-    const list = migrateLegacy();
-    setLinks(list);
+    // load from Supabase via API
+    refreshLinks();
   }, []);
+
+  const hederaIdPattern = /^\d+\.\d+\.\d+$/;
+
+  const refreshLinks = async () => {
+    try {
+      const res = await fetch("/api/links", { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Failed to load links");
+      setLinks(data.links || []);
+    } catch (e) {
+      // ignore list error visually
+    }
+  };
 
   const onConnect = async () => {
     const info = await connectWallet();
@@ -45,7 +71,12 @@ export default function SavePage() {
     setGenComponentHtml("");
 
     if (!to.trim()) {
-      setError("Recipient account ID is required (e.g. 0.0.x)");
+      setError("Recipient account ID is required (e.g. 0.0.1234)");
+      setLoadingGen(false);
+      return;
+    }
+    if (!hederaIdPattern.test(to.trim())) {
+      setError("Recipient must be a Hedera account ID like 0.0.1234");
       setLoadingGen(false);
       return;
     }
@@ -84,13 +115,17 @@ export default function SavePage() {
       .replace(/ on[a-z]+="[^"]*"/gi, "")
       .replace(/ on[a-z]+='[^']*'/gi, "");
 
-  const onSave = (e: React.FormEvent) => {
+  const onSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSavedId(null);
     setError(null);
 
     if (!to.trim()) {
-      setError("Recipient account ID is required");
+      setError("Recipient account ID is required (e.g. 0.0.1234)");
+      return;
+    }
+    if (!hederaIdPattern.test(to.trim())) {
+      setError("Recipient must be a Hedera account ID like 0.0.1234");
       return;
     }
     if (!genAmount || !Number.isFinite(genAmount) || genAmount <= 0) {
@@ -102,24 +137,25 @@ export default function SavePage() {
       return;
     }
 
-    const id = ensureUniqueId(genTitle);
-    const link: PaymentLink = {
-      id,
-      title: genTitle.trim(),
-      to: to.trim(),
-      amount: Number(genAmount),
-      memo: genMemo ? genMemo : undefined,
-      description: genDescription ? genDescription : undefined,
-      componentCode: genComponentHtml ? sanitizeHtml(genComponentHtml) : undefined,
-      createdAt: Date.now(),
-    };
-
     try {
-      upsertLink(link);
-      setLinks(getAllLinks());
-      setSavedId(id);
-    } catch (e) {
-      setError("Failed to save link to localStorage");
+      const res = await fetch("/api/links", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: genTitle.trim(),
+          to: to.trim(),
+          amount: Number(genAmount),
+          memo: genMemo || null,
+          description: genDescription || null,
+          componentCode: genComponentHtml ? sanitizeHtml(genComponentHtml) : null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Failed to save link");
+      setSavedId(data.link.id);
+      await refreshLinks();
+    } catch (e: any) {
+      setError(e?.message || "Failed to save link");
     }
   };
 
@@ -140,7 +176,7 @@ export default function SavePage() {
           <input
             value={to}
             onChange={(e) => setTo(e.target.value)}
-            placeholder="0.0.xxxxx"
+            placeholder="0.0.1234"
             className="w-full border rounded px-3 py-2 bg-transparent"
           />
         </div>
@@ -213,12 +249,11 @@ export default function SavePage() {
         ) : (
           <div className="grid grid-cols-1 gap-3">
             {links
-              .sort((a, b) => b.createdAt - a.createdAt)
               .map((l) => (
                 <div key={l.id} className="border rounded-xl p-4 flex items-center justify-between">
                   <div className="text-sm">
                     <div className="font-medium">{l.title} <span className="text-gray-500">/pay/{l.id}</span></div>
-                    <div className="text-gray-600">{l.amount} HBAR → {l.to}{l.memo ? ` • ${l.memo}` : ""}</div>
+                    <div className="text-gray-600">{l.amount} HBAR → {l.to_account}{l.memo ? ` • ${l.memo}` : ""}</div>
                   </div>
                   <Link href={`/pay/${l.id}`} className="px-3 py-2 rounded bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 text-sm">Open</Link>
                 </div>

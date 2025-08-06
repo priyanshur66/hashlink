@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { buildAndPayTransfer, connectWallet, getConnectedAccount, isWalletConnected } from "@/lib/hashconnect";
-import { getLink, recordPayment } from "@/lib/storage";
 
 export default function PayDetailPage() {
   const params = useParams<{ id: string }>();
@@ -22,21 +21,22 @@ export default function PayDetailPage() {
   useEffect(() => {
     setConnectedAccount(getConnectedAccount());
     if (!id) return;
-    try {
-      const link = getLink(id);
-      if (!link) {
-        setError("Payment link not found");
-        return;
+    (async () => {
+      try {
+        const res = await fetch(`/api/links/${id}`, { cache: "no-store" });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || "Payment link not found");
+        const link = data.link;
+        setTo(link.to_account);
+        setAmount(Number(link.amount));
+        setMemo(link.memo || undefined);
+        setTitle(link.title);
+        setComponentHtml(link.component_code || undefined);
+        setTotals({ totalPaid: Number(link.total_paid || 0), paymentsCount: Number(link.payments_count || 0) });
+      } catch (e: any) {
+        setError(e?.message || "Failed to load link");
       }
-      setTo(link.to);
-      setAmount(link.amount);
-      setMemo(link.memo);
-      setTitle(link.title);
-      setComponentHtml(link.componentCode);
-      setTotals({ totalPaid: Number(link.totalPaid || 0), paymentsCount: Number(link.paymentsCount || 0) });
-    } catch {
-      setError("Failed to load link");
-    }
+    })();
   }, [id]);
 
   const onConnect = async () => {
@@ -53,11 +53,40 @@ export default function PayDetailPage() {
         setConnectedAccount(info?.accountId ?? getConnectedAccount());
         if (!getConnectedAccount()) throw new Error("Connect wallet first");
       }
+
+      // Build and have wallet submit
       await buildAndPayTransfer(to, amount, memo);
-      const updated = recordPayment(id, amount);
-      if (updated) setTotals({ totalPaid: Number(updated.totalPaid || 0), paymentsCount: Number(updated.paymentsCount || 0) });
+
+      // Record payment to backend (status success); server trigger will roll up totals
+      await fetch(`/api/payments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          linkId: id,
+          amount,
+          payerAccount: getConnectedAccount(),
+          memo: memo || null,
+          status: "success",
+        }),
+      });
+
+      // Refresh totals
+      const res = await fetch(`/api/links/${id}`, { cache: "no-store" });
+      const data = await res.json();
+      if (res.ok) {
+        const link = data.link;
+        setTotals({ totalPaid: Number(link.total_paid || 0), paymentsCount: Number(link.payments_count || 0) });
+      }
     } catch (e: any) {
       setError(e?.message || "Payment failed");
+      // Record failed attempt (optional)
+      try {
+        await fetch(`/api/payments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ linkId: id, amount, payerAccount: getConnectedAccount(), memo: memo || null, status: "failed", error: e?.message || "" }),
+        });
+      } catch {}
     } finally {
       setLoading(false);
     }

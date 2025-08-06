@@ -35,11 +35,11 @@ export default function Home() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
         <Link href="/save" className="border rounded-xl p-6 hover:bg-gray-50 dark:hover:bg-zinc-900">
           <div className="font-medium text-lg mb-2">Save Payment Details</div>
-          <p className="text-sm text-gray-600">Enter recipient account, amount, and memo. We store it in your browser localStorage.</p>
+          <p className="text-sm text-gray-600">Enter recipient account, amount, and memo. We store it securely in Supabase.</p>
         </Link>
         <Link href="/pay" className="border rounded-xl p-6 hover:bg-gray-50 dark:hover:bg-zinc-900">
           <div className="font-medium text-lg mb-2">Load & Pay</div>
-          <p className="text-sm text-gray-600">Load saved details and pay using the connected wallet (sender auto-filled).</p>
+          <p className="text-sm text-gray-600">Load saved details from Supabase and pay using the connected wallet (sender auto-filled).</p>
         </Link>
       </div>
 
