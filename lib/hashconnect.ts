@@ -48,32 +48,25 @@ export async function connectWallet(): Promise<{ accountId: string } | null> {
       const acc = session?.accountIds?.[0] || session?.accounts?.[0] || null;
       if (acc) {
         pairedAccountId = acc;
-        try {
-          // Persist for refresh (optional)
-          localStorage.setItem("hc_paired_account", acc);
-        } catch {}
       }
     } catch {}
   });
 
   (hashconnect as any).disconnectionEvent.on(() => {
     pairedAccountId = null;
-    try { localStorage.removeItem("hc_paired_account"); } catch {}
   });
 
-  // Try to restore previous pairing
+  // Initialize (no localStorage restore)
   if (!initialized) {
     try {
       await (hashconnect as any).init();
       initialized = true;
-      const saved = typeof window !== "undefined" ? localStorage.getItem("hc_paired_account") : null;
-      if (saved) pairedAccountId = saved;
     } catch (e) {
       // ignore
     }
   }
 
-  // If already restored
+  // If already paired
   if (pairedAccountId) return { accountId: pairedAccountId };
 
   (hashconnect as any).openPairingModal();
@@ -116,17 +109,31 @@ export async function sendTransactionBase64(base64: string): Promise<any> {
 }
 
 export async function buildAndPayTransfer(toAccountId: string, amountHbar: number, memo?: string) {
+  console.log("🔧 buildAndPayTransfer called with:");
+  console.log("- toAccountId:", toAccountId);
+  console.log("- amountHbar:", amountHbar);
+  console.log("- memo:", memo);
+  console.log("- pairedAccountId:", pairedAccountId);
+  
   if (!hashconnect || !pairedAccountId) throw new Error("Wallet not connected");
   const signer = getSignerUnsafe();
   const from = AccountId.fromString(pairedAccountId);
   const to = AccountId.fromString(toAccountId);
   const amt = new Hbar(amountHbar);
+  
+  console.log("💰 Transaction details:");
+  console.log("- From:", from.toString());
+  console.log("- To:", to.toString());
+  console.log("- Amount:", amt.toString());
 
   let tx = new TransferTransaction()
     .addHbarTransfer(from, amt.negated())
     .addHbarTransfer(to, amt);
 
-  if (memo) tx = tx.setTransactionMemo(String(memo).slice(0, 100));
+  if (memo) {
+    console.log("📝 Adding memo:", memo);
+    tx = tx.setTransactionMemo(String(memo).slice(0, 100));
+  }
 
   const frozen = await (tx as any).freezeWithSigner(signer);
   const res = await (frozen as any).executeWithSigner(signer);

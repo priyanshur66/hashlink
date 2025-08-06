@@ -27,6 +27,16 @@ export default function PayDetailPage() {
         const data = await res.json();
         if (!res.ok) throw new Error(data?.error || "Payment link not found");
         const link = data.link;
+        
+        console.log("📊 Loaded payment link data:");
+        console.log("- ID:", id);
+        console.log("- Title:", link.title);
+        console.log("- To Account:", link.to_account);
+        console.log("- Amount (raw):", link.amount);
+        console.log("- Amount (parsed):", Number(link.amount));
+        console.log("- Memo:", link.memo);
+        console.log("- Full link data:", link);
+        
         setTo(link.to_account);
         setAmount(Number(link.amount));
         setMemo(link.memo || undefined);
@@ -48,6 +58,12 @@ export default function PayDetailPage() {
     setLoading(true);
     setError(null);
     try {
+      console.log("💳 Starting payment process:");
+      console.log("To:", to);
+      console.log("Amount:", amount);
+      console.log("Memo:", memo);
+      console.log("Connected Account:", getConnectedAccount());
+      
       if (!isWalletConnected()) {
         const info = await connectWallet();
         setConnectedAccount(info?.accountId ?? getConnectedAccount());
@@ -55,7 +71,9 @@ export default function PayDetailPage() {
       }
 
       // Build and have wallet submit
-      await buildAndPayTransfer(to, amount, memo);
+      console.log("🚀 Calling buildAndPayTransfer with:", { to, amount, memo });
+      const result = await buildAndPayTransfer(to, amount, memo);
+      console.log("✅ Payment result:", result);
 
       // Record payment to backend (status success); server trigger will roll up totals
       await fetch(`/api/payments`, {
@@ -100,11 +118,12 @@ export default function PayDetailPage() {
 
   // Fallback simple design when no component is stored
   const fallback = (
-    `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#0ea5e9,#22c55e);color:white;">
-      <div style="background:rgba(255,255,255,0.1);backdrop-filter:blur(6px);padding:24px 28px;border-radius:16px;max-width:560px;width:92%;">
-        <div style="font-size:24px;font-weight:700;margin-bottom:6px;">${title || "Payment"}</div>
-        <div style="opacity:0.9">${amount} HBAR → ${to}</div>
-        ${memo ? `<div style="opacity:0.8;margin-top:6px;">Memo: ${memo}</div>` : ""}
+    `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#0f0f23,#1a1a2e,#16213e);color:white;">
+      <div style="background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);padding:32px 36px;border-radius:24px;max-width:600px;width:94%;border:1px solid rgba(255,255,255,0.1);box-shadow:0 25px 50px rgba(0,0,0,0.3);">
+        <div style="font-size:28px;font-weight:700;margin-bottom:12px;text-align:center;">💰 ${title || "Payment"}</div>
+        <div style="opacity:0.9;font-size:18px;text-align:center;margin-bottom:8px;">💳 ${amount} HBAR → ${to}</div>
+        ${memo ? `<div style="opacity:0.8;margin-top:12px;font-size:14px;text-align:center;">📝 Memo: ${memo}</div>` : ""}
+        <div style="margin-top:20px;text-align:center;opacity:0.7;font-size:12px;">🔒 Secure Payment with Hedera</div>
       </div>
     </div>`
   );
@@ -118,34 +137,27 @@ export default function PayDetailPage() {
         />
       </div>
 
-      {/* Floating totals (top-left) */}
-      <div className="fixed left-4 top-4 z-50">
-        <div className="rounded-xl shadow-lg border bg-white/90 dark:bg-zinc-900/90 backdrop-blur px-4 py-2">
-          <div className="text-xs text-gray-500">Total paid</div>
-          <div className="text-sm font-semibold">{totals.totalPaid} HBAR</div>
-          <div className="text-[10px] text-gray-500">{totals.paymentsCount} payments</div>
-        </div>
-      </div>
+      
 
       {/* Floating controls */}
-      <div className="fixed right-4 bottom-4 z-50">
-        <div className="rounded-xl shadow-lg border bg-white/90 dark:bg-zinc-900/90 backdrop-blur px-4 py-3 flex items-center gap-3">
+      <div className="fixed left-1/2 transform -translate-x-1/2 bottom-16 z-50">
+        <div className="rounded-2xl shadow-2xl border border-white/30 bg-black/20 backdrop-blur-xl px-6 py-4 flex items-center gap-4">
           <div className="hidden sm:block">
-            <div className="text-xs text-gray-500">{title || "Payment"}</div>
-            <div className="text-sm font-medium">{amount} HBAR</div>
-            <div className="text-[10px] text-gray-500">Total: {totals.totalPaid} HBAR • {totals.paymentsCount} payments</div>
+            <div className="text-sm text-white font-semibold drop-shadow-lg">{title || "Payment"}</div>
+           
+          
           </div>
           {!isWalletConnected() ? (
-            <button onClick={onConnect} className="px-3 py-2 rounded bg-blue-600 text-white text-sm">Connect</button>
+            <button onClick={onConnect} className="px-4 py-2 rounded-lg bg-blue-500/50 hover:bg-blue-500/70 border border-blue-300/50 text-white text-sm font-semibold backdrop-blur-sm transition-all duration-200 shadow-lg">Connect</button>
           ) : (
-            <div className="text-[10px] text-gray-500 hidden sm:block">Payer: {connectedAccount}</div>
+            <div className="text-xs text-white/90 hidden sm:block font-medium drop-shadow">Payer: {connectedAccount}</div>
           )}
-          <button onClick={onPay} disabled={loading} className="px-3 py-2 rounded bg-green-600 text-white text-sm disabled:opacity-60">
+          <button onClick={onPay} disabled={loading} className="px-5 py-2.5 rounded-lg bg-green-500/50 hover:bg-green-500/70 border border-green-300/50 text-white text-sm font-semibold backdrop-blur-sm transition-all duration-200 disabled:opacity-50 disabled:hover:bg-green-500/50 shadow-lg">
             {loading ? "Paying…" : "Pay"}
           </button>
         </div>
         {error && (
-          <div className="mt-2 text-xs text-white bg-red-600/90 rounded px-3 py-2 shadow">{error}</div>
+          <div className="mt-3 text-sm text-white font-medium bg-red-500/30 border border-red-300/50 backdrop-blur-xl rounded-lg px-4 py-2 shadow-lg drop-shadow">{error}</div>
         )}
       </div>
     </main>

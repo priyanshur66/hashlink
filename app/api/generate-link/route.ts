@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // Simple helper to build a consistent prompt for the LLM
-const SYSTEM_PROMPT = `You are an assistant that creates Hedera payment link metadata.
+const SYSTEM_PROMPT = `You are an assistant that creates Hedera payment link metadata with beautiful dark theme designs.
 Return ONLY a strict JSON object with these keys:
 {
   "title": string,                 // short human title suitable for a link card
@@ -11,14 +11,21 @@ Return ONLY a strict JSON object with these keys:
   "componentHtml": string          // FULL-PAGE, standalone HTML snippet (single <div> root) that covers the entire viewport
 }
 Rules for componentHtml:
-- Must be FULL PAGE: visually fill the entire viewport (e.g., style with height:100vh; width:100%; display:flex; etc.).
-- Use a SINGLE <div> root only. No <html>, <head>, or <body> tags. No external assets.
-- Use INLINE CSS styles only. Do NOT include <style> or <script> tags. No iframes. No external links.
-- The design should clearly show the title, description, and amount in HBAR, and may visually reference the recipient generically.
-- Include a prominent, NON-FUNCTIONAL "Pay" button purely for aesthetics (no onclick, no JS).
-- Ensure good contrast, responsive layout, and safe font fallbacks. Avoid fixed headers/footers that could obscure floating controls.
-- Do not include markdown or backticks in the output.
-- If amount is unclear, infer a reasonable amount and mention it in description.
+- Must be FULL PAGE: visually fill the entire viewport using height:100vh; width:100%; display:flex; or equivalent CSS to cover the complete screen area.
+- Use a SINGLE <div> root element only. No <html>, <head>, or <body> tags. No external assets or dependencies.
+- Use INLINE CSS styles exclusively. Do NOT include <style> or <script> tags. No iframes or external links.
+- **DARK THEME REQUIRED**: Use dark backgrounds (dark blues, purples, grays, blacks) with light text for modern aesthetic.
+- **GLASSMORPHISM STYLE**: Incorporate glassmorphism effects with backdrop-filter:blur(), semi-transparent backgrounds, and subtle borders.
+- **EMOJIS**: Include relevant emojis (💰, 🚀, 💎, 🔥, 🎯, etc.) to make the design more engaging and modern.
+- The design must prominently display the title, description, and amount in HBAR with clear visual hierarchy.
+- Use gradients, shadows, and modern CSS effects for visual appeal. Colors should be dark theme friendly.
+- May include generic visual references to the recipient without specific identifying details.
+- Focus on creating a clean, informative interface without any interactive elements.
+- Ensure excellent contrast ratios with white/light text on dark backgrounds, fully responsive layout, and safe font fallbacks (Arial, sans-serif, etc.).
+- Avoid fixed headers, footers, or any elements that could obstruct content or floating controls.
+- Do not include markdown syntax or backticks in the output.
+- If the amount is unclear, infer a reasonable HBAR amount and mention the inference in the description.
+- Design should be modern, professional, dark-themed, and utilize the full screen real estate effectively.
 `;
 
 export async function POST(req: NextRequest) {
@@ -33,7 +40,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing OPENAI_API_KEY on server" }, { status: 500 });
     }
 
-    const model = process.env.OPENAI_MODEL || "gpt-5"; // set to gpt-5 if available, otherwise override via env
+    const model = process.env.OPENAI_MODEL || "gpt-4o"; // Use GPT-4o for best UI generation quality
 
     const completionRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
