@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Wallet, CreditCard, Save, ArrowRight, Sparkles } from "lucide-react";
+import { Wallet, Link, Save } from "lucide-react";
 import { connectWallet, getConnectedAccount, isWalletConnected } from "@/lib/hashconnect";
 
 export default function Home() {
@@ -11,18 +11,26 @@ export default function Home() {
   const [isConnecting, setIsConnecting] = useState(false);
 
   useEffect(() => {
-    setConnectedAccount(getConnectedAccount());
+    const currentAccount = getConnectedAccount();
+    setConnectedAccount(currentAccount);
+    
+    // If user is already connected, redirect to start page
+    if (currentAccount) {
+      router.push('/start');
+      return;
+    }
     
     // Check for wallet connection changes periodically
     const interval = setInterval(() => {
-      const currentAccount = getConnectedAccount();
-      if (currentAccount !== connectedAccount) {
-        setConnectedAccount(currentAccount);
+      const newAccount = getConnectedAccount();
+      if (newAccount && newAccount !== connectedAccount) {
+        setConnectedAccount(newAccount);
+        router.push('/start');
       }
     }, 1000);
     
     return () => clearInterval(interval);
-  }, [connectedAccount]);
+  }, [connectedAccount, router]);
 
   const onConnect = async () => {
     setIsConnecting(true);
@@ -30,15 +38,14 @@ export default function Home() {
       const info = await connectWallet();
       const accountId = info?.accountId ?? getConnectedAccount();
       setConnectedAccount(accountId);
+      if (accountId) {
+        router.push('/start');
+      }
     } catch (error) {
       console.error('Failed to connect wallet:', error);
     } finally {
       setIsConnecting(false);
     }
-  };
-
-  const handleNavigation = (path: string) => {
-    router.push(path);
   };
 
   return (
@@ -66,127 +73,148 @@ export default function Home() {
         ))}
       </div>
 
-      <main className="relative z-10 flex min-h-screen flex-col items-center gap-8 p-8">
-        {/* Header */}
-        <div className="flex items-center gap-4 mt-8 mb-4">
-          <div className="relative">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg">
-              <Sparkles className="w-6 h-6 text-white" />
+      {/* Header */}
+      <header className="relative z-10 mx-8 mt-8 backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl shadow-xl">
+        <div className="px-8 py-4 flex items-center justify-between">
+          {/* Left side - Project name */}
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-lg">
+                <Link className="w-5 h-5 text-white" />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl blur opacity-50"></div>
             </div>
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl blur opacity-50"></div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
+              Hashlinks
+            </h1>
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
-            HashLinks
-          </h1>
-        </div>
 
-        <p className="text-purple-200 text-center max-w-md opacity-80">
-          Experience the future of payments hashLinks
-        </p>
-
-        {/* Wallet Connection */}
-        <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-6 shadow-xl">
-          {!isWalletConnected() ? (
-            <button 
-              onClick={onConnect}
-              disabled={isConnecting}
-              className="group relative px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white font-semibold
-                         hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300
-                         shadow-lg hover:shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed
-                         flex items-center gap-3"
-            >
-              <Wallet className="w-5 h-5" />
-              {isConnecting ? (
-                <span className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  Connecting...
+          {/* Right side - Wallet connect button */}
+          <div className="flex items-center">
+            {!isWalletConnected() ? (
+              <button 
+                onClick={onConnect}
+                disabled={isConnecting}
+                className="group relative px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white font-semibold
+                           hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300
+                           shadow-lg hover:shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed
+                           flex items-center gap-3"
+              >
+                <Wallet className="w-4 h-4" />
+                {isConnecting ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Connecting...
+                  </span>
+                ) : (
+                  "Connect Wallet"
+                )}
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl blur opacity-50 -z-10 group-hover:opacity-75 transition-opacity"></div>
+              </button>
+            ) : (
+              <div className="flex items-center gap-3 text-white backdrop-blur-md bg-white/10 border border-white/20 rounded-xl px-4 py-3">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
+                <span className="font-medium">Connected:</span>
+                <span className="font-mono text-purple-200 bg-black/20 px-3 py-1 rounded-lg text-sm">
+                  {connectedAccount}
                 </span>
-              ) : (
-                "Connect Wallet"
-              )}
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl blur opacity-50 -z-10 group-hover:opacity-75 transition-opacity"></div>
-            </button>
-          ) : (
-            <div className="flex items-center gap-3 text-white">
-              <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
-              <span className="font-medium">Connected:</span>
-              <span className="font-mono text-purple-200 bg-black/20 px-3 py-1 rounded-lg">
-                {connectedAccount}
-              </span>
-            </div>
-          )}
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <main className="relative z-10 flex min-h-screen flex-col items-center justify-center gap-12 p-8">
+        {/* Hero Section */}
+        <div className="text-center max-w-4xl">
+          <h2 className="text-6xl font-bold text-white mb-6 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
+            Welcome to hashlinks
+          </h2>
+          <p className="text-purple-200 text-2xl mb-12 opacity-80 leading-relaxed max-w-3xl mx-auto">
+            Experience the future of payments with secure, fast, and easy transactions on the Hedera network.
+          </p>
         </div>
 
         {/* Feature Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mt-8">
-          <div 
-            onClick={() => handleNavigation('/save')}
-            className="group backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-8 
-                       hover:bg-white/15 hover:border-white/30 transition-all duration-500 cursor-pointer
-                       shadow-xl hover:shadow-2xl transform hover:scale-105 hover:-translate-y-2"
-          >
-            <div className="flex items-center gap-4 mb-4">
-              <div className="relative">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl 
-                               flex items-center justify-center shadow-lg group-hover:shadow-blue-500/25 transition-all duration-300">
-                  <Save className="w-7 h-7 text-white" />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl blur opacity-50 group-hover:opacity-75 transition-opacity"></div>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-white group-hover:text-purple-200 transition-colors">
-                  Save Payment Details
-                </h3>
-                <ArrowRight className="w-5 h-5 text-purple-300 group-hover:translate-x-1 transition-transform" />
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
+          <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-8 hover:bg-white/15 hover:border-white/30 transition-all duration-500 transform hover:scale-105">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-2xl flex items-center justify-center mb-6 mx-auto shadow-lg">
+              <Save className="w-8 h-8 text-white" />
             </div>
-            <p className="text-purple-200 leading-relaxed">
-              Securely store recipient accounts, amounts, and memos in Supabase. 
-              Create reusable payment templates for faster transactions.
+            <h3 className="text-xl font-bold text-white mb-4 text-center">
+              Generate HashLinks
+            </h3>
+            <p className="text-purple-200 leading-relaxed text-center">
+              Securely store recipient accounts, amounts, and memos. Create reusable payment templates for faster transactions.
             </p>
-            <div className="mt-4 flex items-center text-sm text-purple-300">
-              <div className="w-2 h-2 bg-purple-400 rounded-full mr-2 animate-pulse"></div>
-              Encrypted & Secure Storage
-            </div>
           </div>
 
-          <div 
-            onClick={() => handleNavigation('/pay')}
-            className="group backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-8 
-                       hover:bg-white/15 hover:border-white/30 transition-all duration-500 cursor-pointer
-                       shadow-xl hover:shadow-2xl transform hover:scale-105 hover:-translate-y-2"
-          >
-            <div className="flex items-center gap-4 mb-4">
-              <div className="relative">
-                <div className="w-14 h-14 bg-gradient-to-br from-pink-400 to-purple-500 rounded-xl 
-                               flex items-center justify-center shadow-lg group-hover:shadow-pink-500/25 transition-all duration-300">
-                  <CreditCard className="w-7 h-7 text-white" />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-br from-pink-400 to-purple-500 rounded-xl blur opacity-50 group-hover:opacity-75 transition-opacity"></div>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-white group-hover:text-purple-200 transition-colors">
-                  Load & Pay
-                </h3>
-                <ArrowRight className="w-5 h-5 text-purple-300 group-hover:translate-x-1 transition-transform" />
-              </div>
+          <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-8 hover:bg-white/15 hover:border-white/30 transition-all duration-500 transform hover:scale-105">
+            <div className="w-16 h-16 bg-gradient-to-br from-pink-400 to-purple-500 rounded-2xl flex items-center justify-center mb-6 mx-auto shadow-lg">
+              <Wallet className="w-8 h-8 text-white" />
             </div>
-            <p className="text-purple-200 leading-relaxed">
-              Instantly load saved payment details and execute transactions. 
-              Your connected wallet is automatically set as the sender.
+            <h3 className="text-xl font-bold text-white mb-4 text-center">
+              Explore HashLinks
+            </h3>
+            <p className="text-purple-200 leading-relaxed text-center">
+              Load saved payment details and execute transactions instantly. Your connected wallet is automatically set as the sender.
             </p>
-            <div className="mt-4 flex items-center text-sm text-purple-300">
-              <div className="w-2 h-2 bg-pink-400 rounded-full mr-2 animate-pulse"></div>
-              One-Click Payments
+          </div>
+
+          <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-8 hover:bg-white/15 hover:border-white/30 transition-all duration-500 transform hover:scale-105 md:col-span-2 lg:col-span-1">
+            <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl flex items-center justify-center mb-6 mx-auto shadow-lg">
+              <Link className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-4 text-center">
+              Secure & Fast
+            </h3>
+            <p className="text-purple-200 leading-relaxed text-center">
+              Built on the Hedera network with enterprise-grade security. Lightning-fast transactions with minimal fees.
+            </p>
+          </div>
+        </div>
+
+        {/* Call to Action */}
+        <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-8 max-w-2xl mx-auto text-center">
+          <h3 className="text-2xl font-bold text-white mb-4">Ready to Get Started?</h3>
+          <p className="text-purple-200 mb-6 leading-relaxed">
+            Connect your wallet using the button in the top right corner to access all payment features and start managing your transactions.
+          </p>
+          <div className="flex items-center justify-center gap-6 text-purple-300 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+              Encrypted Storage
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              Instant Transactions
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-pink-400 rounded-full animate-pulse"></div>
+              Zero Hassle
             </div>
           </div>
         </div>
 
         {/* Footer Info */}
-        <div className="backdrop-blur-sm bg-black/20 border border-white/10 rounded-xl px-6 py-4 mt-8">
-          <div className="flex items-center gap-2 text-purple-300 text-sm">
-            <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
-            The payer is always the currently connected wallet. No sender address field is needed.
+        <div className="backdrop-blur-sm bg-black/20 border border-white/10 rounded-xl px-6 py-4 max-w-4xl">
+          <div className="text-center">
+            <p className="text-purple-300 text-sm leading-relaxed">
+              <span className="inline-flex items-center gap-2">
+                <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse block"></span>
+                Powered by Hedera
+              </span>
+              <span className="mx-4">•</span>
+              <span className="inline-flex items-center gap-2">
+                <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse block"></span>
+                Create Hashlinks with AI
+              </span>
+              <span className="mx-4"></span>
+              <span className="inline-flex items-center gap-2">
+                
+                
+              </span>
+            </p>
           </div>
         </div>
       </main>

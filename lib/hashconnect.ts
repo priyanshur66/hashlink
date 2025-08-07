@@ -108,6 +108,21 @@ export async function sendTransactionBase64(base64: string): Promise<any> {
   return (hashconnect as any).sendTransaction(pairedAccountId, tx as any);
 }
 
+export async function disconnectWallet(): Promise<void> {
+  if (hashconnect) {
+    try {
+      // Disconnect all sessions
+      await (hashconnect as any).disconnect();
+    } catch (error) {
+      console.log("Error during disconnect:", error);
+    }
+  }
+  // Reset local state
+  pairedAccountId = null;
+  hashconnect = null;
+  initialized = false;
+}
+
 export async function buildAndPayTransfer(toAccountId: string, amountHbar: number, memo?: string) {
   console.log("🔧 buildAndPayTransfer called with:");
   console.log("- toAccountId:", toAccountId);
