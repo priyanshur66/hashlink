@@ -154,7 +154,7 @@ export default function Home() {
               
               <p className="text-xl text-purple-100/80 mb-12 leading-relaxed max-w-xl">
                 Experience the future of payments with secure, lightning-fast transactions on the Hedera network. 
-                Create, share, and execute payment links with unprecedented ease.
+                Create, share, and execute payment links with ease.
               </p>
 
               {/* Feature highlights */}
@@ -182,15 +182,15 @@ export default function Home() {
                 <div className="flex flex-wrap gap-4 text-xs text-purple-300">
                   <div className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
-                    Enterprise Security
+                    Generate HashLinks
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
-                    AI-Powered Creation
+                    AI-Powered Txn Creation
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 bg-pink-400 rounded-full animate-pulse"></div>
-                    Zero Knowledge Storage
+                    Broadcast txn on Hedera
                   </div>
                 </div>
               </div>
@@ -213,11 +213,11 @@ export default function Home() {
                     <div className="flex-1">
                       <h3 className="text-xl font-bold text-white mb-3">Generate HashLinks</h3>
                       <p className="text-purple-100/80 text-sm leading-relaxed">
-                        Create intelligent payment templates with encrypted recipient data, amounts, and custom memos for seamless reuse.
+                        Create intelligent payment templates with AI on hedera network.
                       </p>
                       <div className="mt-4 flex items-center gap-2 text-xs text-purple-300">
                         <div className="w-1 h-1 bg-purple-400 rounded-full"></div>
-                        <span>Encrypted • Reusable • Instant</span>
+                        <span>Secure • Reusable • Instant</span>
                       </div>
                     </div>
                   </div>
@@ -240,7 +240,7 @@ export default function Home() {
                       </p>
                       <div className="mt-4 flex items-center gap-2 text-xs text-purple-300">
                         <div className="w-1 h-1 bg-pink-400 rounded-full"></div>
-                        <span>One-Click • Secure • Fast</span>
+                        <span>One-Click • Fast</span>
                       </div>
                     </div>
                   </div>
@@ -289,12 +289,12 @@ export default function Home() {
           {/* Animation Container */}
           <div className="relative h-32 backdrop-blur-md bg-white/5 border border-white/10 rounded-3xl overflow-hidden">
             {/* AI Icon - comes from right */}
-            <div className="absolute top-1/2 -translate-y-1/2 right-8 w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl flex items-center justify-center shadow-lg animate-slide-left">
+            <div className="absolute top-1/2 -translate-y-1/2 right-8 w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-lg animate-slide-left">
               <span className="text-white font-bold text-sm">AI</span>
             </div>
             
             {/* Dollar Icon - comes from left */}
-            <div className="absolute top-1/2 -translate-y-1/2 left-8 w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center shadow-lg animate-slide-right">
+            <div className="absolute top-1/2 -translate-y-1/2 left-8 w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center shadow-lg animate-slide-right">
               <span className="text-white font-bold text-xl">$</span>
             </div>
             
