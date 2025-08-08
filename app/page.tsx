@@ -259,7 +259,7 @@ export default function Home() {
                     <div className="flex-1">
                       <h3 className="text-xl font-bold text-white mb-3">Enterprise Grade</h3>
                       <p className="text-purple-100/80 text-sm leading-relaxed">
-                        Built on Hedera's enterprise-grade infrastructure with quantum-resistant security and minimal environmental impact.
+                        Built on Hedera&apos;s enterprise-grade infrastructure with quantum-resistant security and minimal environmental impact.
                       </p>
                       <div className="mt-4 flex items-center gap-2 text-xs text-purple-300">
                         <div className="w-1 h-1 bg-green-400 rounded-full"></div>
