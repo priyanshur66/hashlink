@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { buildAndPayTransfer, connectWallet, getConnectedAccount, isWalletConnected } from "@/lib/hashconnect";
+import { buildAndPayTransfer, getConnectedAccount, isWalletConnected } from "@/lib/hashconnect";
+import dynamic from "next/dynamic";
+
+const WalletConnectButton = dynamic(() => import('@/app/components/WalletConnect'), { ssr: false });
 
 export default function PayDetailPage() {
   const params = useParams<{ id: string }>();
@@ -19,7 +22,12 @@ export default function PayDetailPage() {
   const [totals, setTotals] = useState<{ totalPaid: number; paymentsCount: number }>({ totalPaid: 0, paymentsCount: 0 });
 
   useEffect(() => {
-    setConnectedAccount(getConnectedAccount());
+    const updateAccount = () => {
+      setConnectedAccount(getConnectedAccount());
+    };
+    updateAccount();
+    const interval = setInterval(updateAccount, 1000);
+
     if (!id) return;
     (async () => {
       try {
@@ -47,11 +55,12 @@ export default function PayDetailPage() {
         setError(e?.message || "Failed to load link");
       }
     })();
+
+    return () => clearInterval(interval);
   }, [id]);
 
-  const onConnect = async () => {
-    const info = await connectWallet();
-    setConnectedAccount(info?.accountId ?? getConnectedAccount());
+  const onConnect = (accountId: string) => {
+    setConnectedAccount(accountId);
   };
 
   const onPay = async () => {
@@ -65,9 +74,9 @@ export default function PayDetailPage() {
       console.log("Connected Account:", getConnectedAccount());
       
       if (!isWalletConnected()) {
-        const info = await connectWallet();
-        setConnectedAccount(info?.accountId ?? getConnectedAccount());
-        if (!getConnectedAccount()) throw new Error("Connect wallet first");
+        setError("Please connect your wallet first.");
+        setLoading(false);
+        return;
       }
 
       // Build and have wallet submit
@@ -148,11 +157,11 @@ export default function PayDetailPage() {
           
           </div>
           {!isWalletConnected() ? (
-            <button onClick={onConnect} className="px-4 py-2 rounded-lg bg-blue-500/50 hover:bg-blue-500/70 border border-blue-300/50 text-white text-sm font-semibold backdrop-blur-sm transition-all duration-200 shadow-lg">Connect</button>
+            <WalletConnectButton onConnect={onConnect} />
           ) : (
             <div className="text-xs text-white/90 hidden sm:block font-medium drop-shadow">Payer: {connectedAccount}</div>
           )}
-          <button onClick={onPay} disabled={loading} className="px-5 py-2.5 rounded-lg bg-green-500/50 hover:bg-green-500/70 border border-green-300/50 text-white text-sm font-semibold backdrop-blur-sm transition-all duration-200 disabled:opacity-50 disabled:hover:bg-green-500/50 shadow-lg">
+          <button onClick={onPay} disabled={loading || !isWalletConnected()} className="px-5 py-2.5 rounded-lg bg-green-500/50 hover:bg-green-500/70 border border-green-300/50 text-white text-sm font-semibold backdrop-blur-sm transition-all duration-200 disabled:opacity-50 disabled:hover:bg-green-500/50 shadow-lg">
             {loading ? "Paying…" : "Pay"}
           </button>
         </div>

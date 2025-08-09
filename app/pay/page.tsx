@@ -1,8 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { connectWallet, getConnectedAccount, isWalletConnected } from "@/lib/hashconnect";
-import { Wallet, CreditCard, Plus, ExternalLink, Sparkles, ArrowRight } from "lucide-react";
+import { getConnectedAccount } from "@/lib/hashconnect";
+import { CreditCard, Plus, ExternalLink, Sparkles, ArrowRight } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const WalletConnectButton = dynamic(() => import('@/app/components/WalletConnect'), { ssr: false });
+
 
 // DB type
 type PaymentLink = {
@@ -19,8 +23,13 @@ export default function PayListPage() {
   const [links, setLinks] = useState<PaymentLink[]>([]);
 
   useEffect(() => {
-    setConnectedAccount(getConnectedAccount());
+    const updateAccount = () => {
+      setConnectedAccount(getConnectedAccount());
+    };
+    updateAccount();
+    const interval = setInterval(updateAccount, 1000);
     refreshLinks();
+    return () => clearInterval(interval);
   }, []);
 
   const refreshLinks = async () => {
@@ -39,9 +48,8 @@ export default function PayListPage() {
     } catch {}
   };
 
-  const onConnect = async () => {
-    const info = await connectWallet();
-    setConnectedAccount(info?.accountId ?? getConnectedAccount());
+  const onConnect = (accountId: string) => {
+    setConnectedAccount(accountId);
   };
 
   return (
@@ -86,25 +94,7 @@ export default function PayListPage() {
             </div>
             
             <div className="flex items-center gap-4">
-              {!isWalletConnected() ? (
-                <button 
-                  onClick={onConnect} 
-                  className="group relative px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white font-semibold
-                             hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300
-                             shadow-lg hover:shadow-purple-500/25 flex items-center gap-2"
-                >
-                  <Wallet className="w-4 h-4" />
-                  Connect Wallet
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl blur opacity-50 -z-10 group-hover:opacity-75 transition-opacity"></div>
-                </button>
-              ) : (
-                <div className="backdrop-blur-sm bg-green-500/20 border border-green-400/30 rounded-xl px-4 py-2">
-                  <div className="flex items-center gap-2 text-green-300 text-sm">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    Payer: <span className="font-mono text-white">{connectedAccount}</span>
-                  </div>
-                </div>
-              )}
+              <WalletConnectButton onConnect={onConnect} />
               
               <Link 
                 href="/save" 
