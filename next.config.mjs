@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  swcMinify: false,
   transpilePackages: [],
   webpack: (config) => {
     // Fallback for native ws dependencies to prevent build errors
