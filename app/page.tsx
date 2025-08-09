@@ -153,7 +153,6 @@ export default function Home() {
               </h2>
               
               <p className="text-xl text-purple-100/80 mb-12 leading-relaxed max-w-xl">
-                Experience the future of payments with secure, lightning-fast transactions on the Hedera network. 
                 Create, share, and execute payment links with ease.
               </p>
 
@@ -189,8 +188,7 @@ export default function Home() {
                     AI-Powered Txn Creation
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-pink-400 rounded-full animate-pulse"></div>
-                    Broadcast txn on Hedera
+                    
                   </div>
                 </div>
               </div>
@@ -213,11 +211,11 @@ export default function Home() {
                     <div className="flex-1">
                       <h3 className="text-xl font-bold text-white mb-3">Generate HashLinks</h3>
                       <p className="text-purple-100/80 text-sm leading-relaxed">
-                        Create intelligent payment templates with AI on hedera network.
+                        Create payment links with AI on hedera network.
                       </p>
                       <div className="mt-4 flex items-center gap-2 text-xs text-purple-300">
                         <div className="w-1 h-1 bg-purple-400 rounded-full"></div>
-                        <span>Secure • Reusable • Instant</span>
+                        <span>Secure • customizable • Instant</span>
                       </div>
                     </div>
                   </div>
@@ -236,7 +234,7 @@ export default function Home() {
                     <div className="flex-1">
                       <h3 className="text-xl font-bold text-white mb-3">Execute HashLinks</h3>
                       <p className="text-purple-100/80 text-sm leading-relaxed">
-                        Load payment details instantly and execute transactions with your connected wallet as the automatic sender.
+                        Load payment details instantly and execute transactions with your wallet.
                       </p>
                       <div className="mt-4 flex items-center gap-2 text-xs text-purple-300">
                         <div className="w-1 h-1 bg-pink-400 rounded-full"></div>
@@ -257,13 +255,13 @@ export default function Home() {
                       <div className="absolute inset-0 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl blur opacity-40 animate-pulse"></div>
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-xl font-bold text-white mb-3">Enterprise Grade</h3>
+                      <h3 className="text-xl font-bold text-white mb-3">Customizable</h3>
                       <p className="text-purple-100/80 text-sm leading-relaxed">
-                        Built on Hedera&apos;s enterprise-grade infrastructure with quantum-resistant security and minimal environmental impact.
+                        Tailor your links UI with prompts and AI-generated designs.
                       </p>
                       <div className="mt-4 flex items-center gap-2 text-xs text-purple-300">
                         <div className="w-1 h-1 bg-green-400 rounded-full"></div>
-                        <span>Quantum-Safe • Carbon Negative • 99.999% Uptime</span>
+                        <span>Customizable UI</span>
                       </div>
                     </div>
                   </div>
@@ -283,7 +281,7 @@ export default function Home() {
             <h3 className="text-4xl font-bold text-white mb-4">
               The Magic of <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">AI-Powered Hashlinks</span>
             </h3>
-            <p className="text-purple-200 text-lg">Watch how AI transforms payments into instant Links</p>
+            <p className="text-purple-200 text-lg">AI transforms payments into instant Links</p>
           </div>
           
           {/* Animation Container */}
