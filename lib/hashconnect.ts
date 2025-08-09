@@ -1,10 +1,14 @@
 "use client";
 
 import { AccountId, Hbar, LedgerId, Transaction, TransferTransaction } from "@hashgraph/sdk";
+import { HashConnect } from "hashconnect";
 
 // HashConnect singleton state
 let hashconnect: any | null = null;
-let pairedAccountId: string | null = null;
+// Restore paired account from localStorage
+let pairedAccountId: string | null = (typeof window !== 'undefined')
+  ? localStorage.getItem('pairedAccountId')
+  : null;
 let initialized = false;
 
 function getLedgerId(): LedgerId {
@@ -35,7 +39,6 @@ export async function connectWallet(): Promise<{ accountId: string } | null> {
   if (typeof window === "undefined") return null;
   if (pairedAccountId && hashconnect) return { accountId: pairedAccountId };
 
-  const { HashConnect } = await import("hashconnect");
   const ledger = getLedgerId();
   const projectId = getProjectId();
   const metadata = buildMetadata();
@@ -48,6 +51,8 @@ export async function connectWallet(): Promise<{ accountId: string } | null> {
       const acc = session?.accountIds?.[0] || session?.accounts?.[0] || null;
       if (acc) {
         pairedAccountId = acc;
+        // Persist to localStorage
+        localStorage.setItem('pairedAccountId', acc);
       }
     } catch {}
   });
@@ -121,6 +126,10 @@ export async function disconnectWallet(): Promise<void> {
   pairedAccountId = null;
   hashconnect = null;
   initialized = false;
+  // Clear persisted account
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('pairedAccountId');
+  }
 }
 
 export async function buildAndPayTransfer(toAccountId: string, amountHbar: number, memo?: string) {
