@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Wallet, CreditCard, Save, ArrowRight, Sparkles, LogOut } from "lucide-react";
-import { getConnectedAccount, isWalletConnected, disconnectWallet } from "@/lib/hashconnect";
+import { CreditCard, Save, ArrowRight, Sparkles } from "lucide-react";
+import { getConnectedAccount } from "@/lib/hashconnect";
+import dynamic from "next/dynamic";
+
+const WalletConnectButton = dynamic(() => import('@/app/components/WalletConnect'), { ssr: false });
 
 export default function StartPage() {
   const router = useRouter();
@@ -37,18 +40,6 @@ export default function StartPage() {
 
   const handleNavigation = (path: string) => {
     router.push(path);
-  };
-
-  const handleDisconnect = async () => {
-    try {
-      await disconnectWallet();
-      // After successful disconnect, redirect to landing page
-      router.push('/');
-    } catch (error) {
-      console.error('Failed to disconnect wallet:', error);
-      // Even if disconnect fails, redirect to landing page
-      router.push('/');
-    }
   };
 
   if (isLoading) {
@@ -105,20 +96,7 @@ export default function StartPage() {
 
           {/* Right side - Wallet status */}
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3 text-white backdrop-blur-md bg-white/10 border border-white/20 rounded-xl px-4 py-3">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
-              <span className="font-medium">Connected:</span>
-              <span className="font-mono text-purple-200 bg-black/20 px-3 py-1 rounded-lg text-sm">
-                {connectedAccount}
-              </span>
-            </div>
-            <button
-              onClick={handleDisconnect}
-              className="p-3 bg-red-500/20 hover:bg-red-500/30 border border-red-400/20 hover:border-red-400/40 rounded-xl text-red-300 hover:text-red-200 transition-all duration-300"
-              title="Disconnect Wallet"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
+            <WalletConnectButton />
           </div>
         </div>
       </header>

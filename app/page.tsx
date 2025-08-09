@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Wallet, Link, Save } from "lucide-react";
-import { connectWallet, getConnectedAccount, isWalletConnected } from "@/lib/hashconnect";
+import { Link, Save, Wallet } from "lucide-react";
+import { getConnectedAccount } from "@/lib/hashconnect";
+import dynamic from "next/dynamic";
+
+const WalletConnectButton = dynamic(() => import('@/app/components/WalletConnect'), { ssr: false });
 
 export default function Home() {
   const router = useRouter();
-  const [connectedAccount, setConnectedAccount] = useState<string | null>(null);
-  const [isConnecting, setIsConnecting] = useState(false);
 
   useEffect(() => {
     const currentAccount = getConnectedAccount();
-    setConnectedAccount(currentAccount);
     
     // If user is already connected, redirect to start page
     if (currentAccount) {
@@ -23,30 +23,14 @@ export default function Home() {
     // Check for wallet connection changes periodically
     const interval = setInterval(() => {
       const newAccount = getConnectedAccount();
-      if (newAccount && newAccount !== connectedAccount) {
-        setConnectedAccount(newAccount);
+      if (newAccount) {
         router.push('/start');
       }
     }, 1000);
     
     return () => clearInterval(interval);
-  }, [connectedAccount, router]);
+  }, [router]);
 
-  const onConnect = async () => {
-    setIsConnecting(true);
-    try {
-      const info = await connectWallet();
-      const accountId = info?.accountId ?? getConnectedAccount();
-      setConnectedAccount(accountId);
-      if (accountId) {
-        router.push('/start');
-      }
-    } catch (error) {
-      console.error('Failed to connect wallet:', error);
-    } finally {
-      setIsConnecting(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
@@ -100,35 +84,7 @@ export default function Home() {
 
           {/* Right side - Wallet connect button */}
           <div className="flex items-center">
-            {!isWalletConnected() ? (
-              <button 
-                onClick={onConnect}
-                disabled={isConnecting}
-                className="group relative px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white font-semibold
-                           hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300
-                           shadow-lg hover:shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed
-                           flex items-center gap-3"
-              >
-                <Wallet className="w-4 h-4" />
-                {isConnecting ? (
-                  <span className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    Connecting...
-                  </span>
-                ) : (
-                  "Connect Wallet"
-                )}
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl blur opacity-50 -z-10 group-hover:opacity-75 transition-opacity"></div>
-              </button>
-            ) : (
-              <div className="flex items-center gap-3 text-white backdrop-blur-md bg-white/10 border border-white/20 rounded-xl px-4 py-3">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
-                <span className="font-medium">Connected:</span>
-                <span className="font-mono text-purple-200 bg-black/20 px-3 py-1 rounded-lg text-sm">
-                  {connectedAccount}
-                </span>
-              </div>
-            )}
+            <WalletConnectButton />
           </div>
         </div>
       </header>

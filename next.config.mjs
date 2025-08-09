@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['hashconnect'],
+  transpilePackages: [],
   webpack: (config) => {
     // Fallback for native ws dependencies to prevent build errors
     config.resolve.fallback = {
@@ -12,7 +12,7 @@ const nextConfig = {
   },
   // Add this section
   experimental: {
-    serverComponentsExternalPackages: ['hashconnect']
+    serverComponentsExternalPackages: []
   }
 };
 
