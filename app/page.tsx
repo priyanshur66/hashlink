@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Link, Save, Wallet } from "lucide-react";
-import { getConnectedAccount } from "@/lib/hashconnect";
 import dynamic from "next/dynamic";
 
 const WalletConnectButton = dynamic(() => import('@/app/components/WalletConnect'), { ssr: false });
@@ -11,26 +9,11 @@ const WalletConnectButton = dynamic(() => import('@/app/components/WalletConnect
 export default function Home() {
   const router = useRouter();
 
-  useEffect(() => {
-    const currentAccount = getConnectedAccount();
-    
-    // If user is already connected, redirect to start page
-    if (currentAccount) {
+  const handleConnect = (accountId: string) => {
+    if (accountId) {
       router.push('/start');
-      return;
     }
-    
-    // Check for wallet connection changes periodically
-    const interval = setInterval(() => {
-      const newAccount = getConnectedAccount();
-      if (newAccount) {
-        router.push('/start');
-      }
-    }, 1000);
-    
-    return () => clearInterval(interval);
-  }, [router]);
-
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
@@ -84,7 +67,7 @@ export default function Home() {
 
           {/* Right side - Wallet connect button */}
           <div className="flex items-center">
-            <WalletConnectButton />
+            <WalletConnectButton onConnect={handleConnect} />
           </div>
         </div>
       </header>
