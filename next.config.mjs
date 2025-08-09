@@ -1,4 +1,14 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+  webpack: (config) => {
+    // Fallback for native ws dependencies to prevent build errors
+    config.resolve.fallback = {
+      ...(config.resolve.fallback || {}),
+      bufferutil: false,
+      'utf-8-validate': false
+    };
+    return config;
+  }
+};
 
 export default nextConfig;

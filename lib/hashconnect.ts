@@ -1,7 +1,6 @@
 "use client";
 
 import { AccountId, Hbar, LedgerId, Transaction, TransferTransaction } from "@hashgraph/sdk";
-import { HashConnect } from "hashconnect";
 
 // HashConnect singleton state
 let hashconnect: any | null = null;
@@ -37,13 +36,15 @@ function buildMetadata() {
 
 export async function connectWallet(): Promise<{ accountId: string } | null> {
   if (typeof window === "undefined") return null;
-  if (pairedAccountId && hashconnect) return { accountId: pairedAccountId };
-
-  const ledger = getLedgerId();
-  const projectId = getProjectId();
-  const metadata = buildMetadata();
-
-  hashconnect = new HashConnect(ledger as any, projectId, metadata, true);
+  if (!hashconnect) {
+    // Load HashConnect dynamically on client only
+    const { HashConnect } = await import('hashconnect');
+    const ledger = getLedgerId();
+    const projectId = getProjectId();
+    const metadata = buildMetadata();
+    hashconnect = new HashConnect(ledger as any, projectId, metadata, true);
+  }
+  if (pairedAccountId) return { accountId: pairedAccountId };
 
   // Pairing event returns the session including accounts
   (hashconnect as any).pairingEvent.on((session: any) => {
