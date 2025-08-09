@@ -9,6 +9,10 @@ const nextConfig = {
       'utf-8-validate': false
     };
     return config;
+  },
+  // Add this section
+  experimental: {
+    serverComponentsExternalPackages: ['hashconnect']
   }
 };
 
