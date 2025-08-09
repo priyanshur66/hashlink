@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['hashconnect', 'protobufjs'],
+  transpilePackages: [],
   webpack: (config) => {
     // Fallback for native ws dependencies to prevent build errors
     config.resolve.fallback = {
